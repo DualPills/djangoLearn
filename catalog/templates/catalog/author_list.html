@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Author List</h1>
+  {% if author_list %}
+  <div class="container_san_pham_moi">
+      {% for author in author_list %}
+      
+        <div class="iterm">
+            <img src="" alt="">
+        <a href="{{ author.get_absolute_url }}">{{ author.first_name }} {{ author.last_name }}</a>
+        ({{author.date_of_birth}})
+      </div>
+    
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>There are no authors registered in the library.</p>
+  {% endif %}
+{% endblock %}

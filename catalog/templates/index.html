@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h2 id="san_pham_moi">TẤT CẢ SẢN PHẨM</h2>
+<section class="cartegory">
+  {% for book in book_list%}
+    <div class="container_san_pham_moi">
+        <div class="iterm">
+            <img src="" alt="">
+            <h1>{{book.title}}</h1>
+            <h1>{{book.author}}</h1>
+        </div>
+      </div>
+  {% endfor %}
+</section>
+{% endblock %}
