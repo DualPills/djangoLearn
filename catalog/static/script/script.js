@@ -1,37 +1,42 @@
-// let currentIndex = 0;
-// let slides = document.querySelectorAll(".slides img");
-// let dots = document.querySelectorAll(".dot");
-// let autoSlideInterval; // Để quản lý việc tự động chuyển slide
-// function showSlide(index) {
-//     // Ẩn tất cả ảnh và bỏ class 'active' khỏi tất cả dots
-//     slides.forEach((slide, i) => {
-//         slide.classList.remove("active");
-//         dots[i].classList.remove("active");
-//     });
-//     // Hiển thị ảnh và chấm tròn tương ứng với index hiện tại
-//     slides[index].classList.add("active");
-//     dots[index].classList.add("active");
-// }
-// function nextSlide() {
-//     currentIndex = (currentIndex + 1) % slides.length; // Di chuyển đến ảnh tiếp theo
-//     showSlide(currentIndex);
-// }
-// function currentSlide(index) {
-//     currentIndex = index - 1; // Đặt ảnh hiện tại là index đã chọn
-//     showSlide(currentIndex);
-//     resetAutoSlide(); // Khi người dùng bấm vào dot, tự động reset lại việc tự chuyển ảnh
-// }
-// function startAutoSlide() {
-//     autoSlideInterval = setInterval(nextSlide, 3000); 
-// }
-// function resetAutoSlide() {
-//     clearInterval(autoSlideInterval); 
-//     startAutoSlide(); 
-// }
-// startAutoSlide();
+document.addEventListener("DOMContentLoaded", function() {
+    let currentIndex = 0;
+    const slides = document.querySelectorAll(".slides img");
+    const dots = document.querySelectorAll(".dot");
+    let autoSlideInterval;
 
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.remove("active");
+            dots[i].classList.remove("active");
+        });
+        slides[index].classList.add("active");
+        dots[index].classList.add("active");
+    }
 
-//--------------------------------------
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % slides.length;
+        showSlide(currentIndex);
+    }
+
+    window.currentSlide = function(index) {
+        currentIndex = index - 1;
+        showSlide(currentIndex);
+        resetAutoSlide();
+    }
+
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(nextSlide, 3000);
+    }
+
+    function resetAutoSlide() {
+        clearInterval(autoSlideInterval);
+        startAutoSlide();
+    }
+
+    startAutoSlide();
+});
+
+//------------------------------------------------------
 const itemsPerRow = 6; // 6 products per row
 const rowsPerPage = 3; // 3 rows per page
 const itemsPerPage = itemsPerRow * rowsPerPage; // Total products per page (18)
