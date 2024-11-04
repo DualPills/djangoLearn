@@ -1,14 +1,22 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
+
 {% block content %}
   <h1>Book List</h1>
   {% if book_list %}
   <div class="container_san_pham_moi">
       {% for book in book_list%}
             <div class="iterm">
-                <img src="" alt="">
+                <img src="{% static 'img/' %}{{ book.title|slugify|lower }}.jpg" alt="" onerror="this.src='{% static 'img/thongbao.webp' %}';">
                 <a href="{{ book.get_absolute_url }}">{{ book.title }}</a>
                 <p>{{book.author}}</p>
+                {% for copy in book.bookinstance_set.all|slice:1 %}
+                    {% if copy.status == 'a' %}
+                    <a href="{% url 'add_to_cart' copy.id %}">Add to Cart</a>
+                    {% endif %}
+                {% endfor %}
+                
             </div>
           
       {% endfor %}

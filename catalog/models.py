@@ -6,6 +6,9 @@ from django.urls import reverse # Used in get_absolute_url() to get URL for spec
 from django.db.models import UniqueConstraint # Constrains fields to unique values
 from django.db.models.functions import Lower # Returns lower cased value of field
 
+from django.conf import settings
+from datetime import date
+
 class Genre(models.Model):
     """Model representing a book genre."""
     name = models.CharField(
@@ -51,6 +54,20 @@ class Book(models.Model):
     # Genre class has already been defined so we can specify the object above.
     genre = models.ManyToManyField(
         Genre, help_text="Select a genre for this book")
+    
+    price = models.DecimalField(max_digits=6, decimal_places=2, help_text="Price of this book",default=0.00)
+
+    price_choices=[
+        ('USD','United State Dollars'),
+        ('VND','Vietnamese Dong'),
+    ]
+    price_unit=models.CharField(
+        max_length=3,
+        choices=price_choices,
+        default='USD',
+        help_text='Choose the unit of the price',
+        null=True,
+    )
 
     Language_choices=[
         ('en','English'),
@@ -84,6 +101,9 @@ class BookInstance(models.Model):
     imprint = models.CharField(max_length=200)
     due_back = models.DateField(null=True, blank=True)
 
+    borrower = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+
     LOAN_STATUS = (
         ('m', 'Maintenance'),
         ('o', 'On loan'),
@@ -101,10 +121,17 @@ class BookInstance(models.Model):
 
     class Meta:
         ordering = ['due_back']
+        permissions = (("can_mark_returned", "Set book as returned"),)
+
+    def is_overdue(self):
+        """Determines if the book is overdue based on due date and current date."""
+        return bool(self.due_back and date.today() > self.due_back)
 
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id} ({self.book.title})'
+    
+
 
 class Author(models.Model):
     """Model representing an author."""
@@ -122,6 +149,27 @@ class Author(models.Model):
 
     def __str__(self):
         """String for representing the Model object."""
-        return f'{self.last_name}, {self.first_name}'
+        return f'{self.first_name} {self.last_name}'
+
+
+class Cart(models.Model):
+    """Model representing a shopping cart."""
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)  # Assuming you want to associate a cart with a user
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        """String for representing the Cart object."""
+        return f'Cart {self.id} for {self.user.username}'
+
+
+class CartItem(models.Model):
+    """Model representing an item in the shopping cart."""
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        """String for representing the CartItem object."""
+        return f'{self.quantity} of {self.book.title}'
 
 

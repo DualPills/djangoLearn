@@ -26,6 +26,30 @@
           <div class="menu">
               <li><a href="{%url 'books'%}">Sách</a></li>
               <li><a href="{%url 'authors'%}">Tác giả</a></li>
+                {% if user.is_authenticated %}
+                <li>User: {{ user.get_username }}</li>
+                    <li>
+                    <form id="logout-form" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link">Logout</button>
+                    </form>
+                    </li>
+                    <li><a href="{% url 'view_cart'%}"> Cart </a> </li>
+                    <li><a href="{% url 'books_per_author'%}"> Bieu Do </a> </li>
+                    
+
+                    {% if user.is_staff %}
+                    <li><a href="{% url 'borrowed-books' %}">Borrowed</a></li>
+                    <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                    {%else%}
+                    <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
+                    {%endif%}
+                    
+                {% else %}
+                    <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
+                {% endif %}
+
+            
           <div class="other">
               <li><input placeholder="Nhập từ cần tìm" type="text"> <i class="fas fa-search"></i></li>
               <li><a class="fa fa-shopping-bag" href=""></a></li>
@@ -33,12 +57,32 @@
     {% endblock %}
     </header>
 
-    <section id="slider">
+    {% comment %} <section id="slider">
         <div class="slider-container">
             <div class="slides">
                 <img src="{% static 'img/1.jpg' %}" alt="slide1" class="active">
         </div>
-    </section>
+    </section> {% endcomment %}
+
+    <section id="slider">
+      <div class="slider-container">
+          <div class="slides">
+              <img src="{% static 'img/1.jpg' %}" alt="slide1" class="active">
+              <img src="{% static 'img/2.jpg' %}" alt="slide2">
+              <img src="{% static 'img/3.jpg' %}" alt="slide3">
+              <img src="{% static 'img/4.jpg' %}" alt="slide4">
+              <img src="{% static 'img/5.jpg' %}" alt="slide5">
+          </div>
+          <div class="dots-container">
+              <span class="dot active" onclick="currentSlide(1)"></span>
+              <span class="dot" onclick="currentSlide(2)"></span>
+              <span class="dot" onclick="currentSlide(3)"></span>
+              <span class="dot" onclick="currentSlide(4)"></span>
+              <span class="dot" onclick="currentSlide(5)"></span>
+          </div>
+      </div>
+  </section>
+
 
     <div class="col-sm-10 ">
           {% block content %}
@@ -64,5 +108,85 @@
 
         </div>
       </div>
+
+      <!----------------------- footer-------------------------->
+<div class="footer_top">
+  <div class="wraptem">
+      <span class="img">
+          <img src="{% static 'img/icon 1.png' %}" alt="icon">
+      </span>
+      <div class="content_right">
+          <p>SHIP COD TOÀN QUỐC</p>
+          <span>Miễn phí vận chuyển toàn quốc cho đơn hàng từ 999.000 đ</span>
+      </div>
+  </div>
+  <div class="wraptem">
+      <span class="img">
+          <img src="{% static 'img/icon 2.png' %}" alt="icon">
+      </span>
+      <div class="content_right">
+          <p>CHẤT LƯỢNG TUYỆT ĐỐI 100%</p>
+          <span>Cam kết sản phẩm chính hãng</span>
+      </div>
+  </div>
+  <div class="wraptem">
+      <span class="img">
+          <img src="{% static 'img/icon 3.png' %}" alt="icon">
+      </span>
+      <div class="content_right">
+          <p>THANH TOÁN DỄ DÀNG</p>
+          <span>Phương thức thanh toán đa dạng và cực kỳ tiện lợi</span>
+      </div>
+  </div>
+  <div class="wraptem">
+      <span class="img">
+          <img src="{% static 'img/icon 4.png' %}" alt="icon">
+      </span>
+      <div class="content_right">
+          <p>TIẾT KIỆM THỜI GIAN</p>
+          <span>Mua sắm dễ hơn khi Online</span>
+      </div>
+  </div>
+</div>
+<div class="background">
+  <div class="footer_bottom">
+  <li> <h2>Book.vn</h2>
+      <ul>
+          <li>Số 32, Đường số 6 nhà ở khu Z756, Phường 12, Quận 10, Thành phố Hồ Chí Minh</li>
+          <li>Số điện thoại:1900 1093 </li>
+          <li>gmail:ecom@sneakerbuzz.vn</li>
+          <li>Công ty TNHH TM&DV Phú Vỹ. Giấy chứng nhận Đăng ký Kinh doanh số 0313679661 do Sở Kế hoạch và Đầu tư Thành phố Hồ Chí Minh cấp ngày 07/03/2016</li>
+          <li><img src="{% static 'img/thongbao.webp' %}" alt="bộ công thuong"></li>
+      </ul>
+  </li>
+  <li> <h2>DANH MỤC</h2>
+      <ul>
+          <li>Sach</li>
+          <li>Tác giả</li>
+      </ul>
+  </li>
+  <li> <h2>CHÍNH SÁCH</h2>
+      <ul>
+          <li>Điều khoản & điều kiện</li>
+          <li>Chính sách bảo mật</li>
+          <li>Chính sách giao hàng</li>
+          <li>Chính sách bảo hành</li>
+          <li>Chính sách đổi trả</li>
+          <li>Phương thức thanh toán</li>
+          <li>Hướng dẫn đặt hàng</li>
+          <li>Câu hỏi thường gặp</li>
+          <li>Liên Hệ Hợp Tác</li>
+          <li>Chính sách ưu đãi khách hàng mới</li>
+      </ul>
+  </li>
+  <li> <h2>TIN TỨC</h2>
+      <ul>
+          <li>THỜI TRANG</li>
+          <li>KHUYẾN MÃI</li>
+          <li>LOOKBOOK</li>
+      </ul>
+  </li>
+</div>
+</div>
   </body>
 </html>
