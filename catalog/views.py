@@ -1,47 +1,50 @@
 from typing import Any
 from django.shortcuts import render
-from .models import Book, Author, BookInstance, Genre
+from .models import Book, Author, BookInstance, Genre, Cart, CartItem,Inventory
 from django.views import generic
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import BookInstance, Cart, CartItem
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-
-
+from django.http import JsonResponse
+import json
+from django.views.decorators.http import require_POST
 # For Graph
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('agg')
 import io
-import urllib
 import base64
+from django.contrib.auth.models import User
 
 @login_required
-def add_to_cart(request, book_isbn):
-    book = get_object_or_404(Book, id=book_isbn)
-    
-    # Get or create a cart for the user
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    
-    # Check if the item already exists in the cart
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book_isbn)
-    
-    if not created:
-        # If the item already exists, increase the quantity
-        cart_item.quantity += 1
-        cart_item.save()
-
-    return redirect('view_cart')
-
-@login_required
-def view_cart(request):
+@require_POST
+def add_to_cart(request, isbn):
     try:
-        cart = Cart.objects.get(user=request.user)
-        cart_items = cart.items.all()
-    except Cart.DoesNotExist:
-        cart_items = []
-    
-    return render(request, 'cart/view_cart.html', {'cart_items': cart_items})
+        data = json.loads(request.body)  # Parse the JSON request body
+        quantity = data.get('quantity', 1)
+        book = get_object_or_404(Book, isbn=isbn)
+
+        # Get or create cart for user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        # Add item to cart
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+        cart_item.quantity += quantity
+        cart_item.save()
+        
+        return JsonResponse({'success': True, 'message': 'Book added to cart successfully!'})
+    except Exception as e:
+        # Ensure that all exceptions also return a JSON response
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def cart_detail(request):
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_items = cart.items.all()
+
+    total_price = sum(item.book.price * item.quantity for item in cart_items)
+
+    return render(request, 'catalog/cart_detail.html', {'cart': cart, 'cart_items': cart_items, 'total_price': total_price})
 
 
 # Create your views here.
@@ -195,3 +198,94 @@ class view_loaned_book_librarian(PermissionRequiredMixin,generic.ListView):
             .filter(status__exact='o')
             .order_by('due_back')
         )
+
+
+def update_inventory(book_isbn, quantity_change):
+    """Update inventory for a specific book based on ISBN."""
+    # Get the book instance using the ISBN
+    book = get_object_or_404(Book, isbn=book_isbn)
+    
+    # Get the associated inventory item
+    inventory = get_object_or_404(Inventory, book=book)
+    
+    # Calculate the new quantity available
+    new_quantity = inventory.quantity_available + quantity_change
+    
+    # Check if new quantity is sufficient
+    if new_quantity < 0:
+        return JsonResponse({'success': False, 'error': 'Insufficient inventory.'})
+
+    # Update the inventory quantity
+    inventory.quantity_available = new_quantity
+    inventory.save()
+    
+    return JsonResponse({'success': True, 'quantity_available': inventory.quantity_available})
+
+@login_required
+@require_POST
+def checkout(request):
+    try:
+        data = json.loads(request.body)
+        items = data.get('items', [])
+
+        # Process each cart item using the book's ISBN
+        for item in items:
+            book_isbn = item['book_isbn']  # Change this to book_isbn
+            quantity = int(item['quantity'])  # Ensure quantity is an integer
+
+            # Get the cart item using the book's ISBN
+            cart_item = get_object_or_404(CartItem, book__isbn=book_isbn)
+            
+            # Update inventory: decrease available quantity
+            update_inventory(book_isbn, -quantity)
+
+        return JsonResponse({'success': True, 'message': 'Checkout completed successfully!'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+    
+
+@login_required
+def checkout_success(request):
+    return render(request, 'catalog/checkout_success.html')
+
+from decimal import Decimal
+
+@login_required
+@require_POST
+def update_cart_item_quantity(request):
+    try:
+        data = json.loads(request.body)  # Parse the JSON request body
+        book_isbn = data.get('book_isbn')
+        quantity = int(data.get('quantity', 1))  # Convert quantity to an integer
+
+        # Get the cart item by book ISBN
+        cart_item = get_object_or_404(CartItem, book__isbn=book_isbn, cart__user=request.user)
+        
+        # Update the quantity
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        # Calculate new total price for this item
+        # Ensure that the price is treated as a Decimal
+        total_price = cart_item.book.price * Decimal(cart_item.quantity)
+
+        return JsonResponse({'success': True, 'total_price': total_price.quantize(Decimal('0.01'))})  # Format to 2 decimal places
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    
+from .forms import UserRegistrationForm
+from django.contrib.auth import login
+def register(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            login(request, user)  # Automatically log in the user after registration
+            return redirect(reverse('books'))  # Redirect to a desired page after registration
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'catalog/register.html', {'form': form})

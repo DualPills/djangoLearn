@@ -165,11 +165,22 @@ class Cart(models.Model):
 class CartItem(models.Model):
     """Model representing an item in the shopping cart."""
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, to_field='isbn')
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         """String for representing the CartItem object."""
         return f'{self.quantity} of {self.book.title}'
 
+class Inventory(models.Model):
+    """Model representing the inventory of books in the library."""
+    book = models.OneToOneField('Book', on_delete=models.CASCADE, primary_key=True)
+    quantity_available = models.PositiveIntegerField(default=0)
 
+    def __str__(self):
+        """String for representing the Inventory object."""
+        return f'{self.book.title} - Available: {self.quantity_available}'
+
+    class Meta:
+        verbose_name = "Inventory"
+        verbose_name_plural = "Inventories"
