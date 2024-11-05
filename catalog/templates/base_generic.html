@@ -34,19 +34,22 @@
                         <button type="submit" class="btn btn-link">Logout</button>
                     </form>
                     </li>
-                    <li><a href="{% url 'view_cart'%}"> Cart </a> </li>
-                    <li><a href="{% url 'books_per_author'%}"> Bieu Do </a> </li>
+                    <li><a href="{% url 'cart-detail'%}"> Cart </a> </li>
+                    
                     
 
                     {% if user.is_staff %}
                     <li><a href="{% url 'borrowed-books' %}">Borrowed</a></li>
                     <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                    <li><a href="{% url 'books_per_author'%}"> Bieu Do </a> </li>
                     {%else%}
                     <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
+
                     {%endif%}
                     
                 {% else %}
                     <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
+                    <li><a href="{% url 'register' %}">Register</a></li>
                 {% endif %}
 
             
@@ -109,6 +112,7 @@
         </div>
       </div>
 
+{% block extra_js %}{% endblock extra_js %}
       <!----------------------- footer-------------------------->
 <div class="footer_top">
   <div class="wraptem">
